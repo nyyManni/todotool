@@ -1,13 +1,9 @@
 #!/usr/bin/env bash
 
 
-DB_FILE="$HOME/todo/todo.csv"
+DB_FILE="$HOME/.todo/todo.csv"
 mkdir -p "$(dirname "$DB_FILE")"
 touch "$DB_FILE"
-
-list() {
-    echo "todo: list"
-}
 
 add() {
     task="$1"
