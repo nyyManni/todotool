@@ -7,7 +7,8 @@ touch "$DB_FILE"
 
 add() {
     task="$1"
-    deadline="$2 $3"
+    TIME="${3:-23:59}"
+    deadline="$2 $TIME"
 
     # Date format yyyy-mm-dd hh:mm
     [[ "$deadline" =~ 201[5-9]-[01][0-9]-[0-3][0-9]\ [0-2][0-9]:[0-5][0-9] ]] || {
@@ -40,10 +41,10 @@ remove() {
 list() {
     target="${1// /.*}"
     [ "$target" != "" ] || target=".*"
-    sed -n -e /"$target"'/Ip' "$DB_FILE" |
 
-        # Ugly piece of code, provides colored output
-        awk -F '|' '{printf "%s  ", $1}/TODO/{printf "\033[31m"}/DONE/{printf "\033[32m"}{printf "%s\033[0m\t%s\n", $2, $3}'
+    sed -n -e /"$target"'/Ip' "$DB_FILE" |
+        # Format output and show colors
+        awk -F '|' -v width="$(tput cols)" -f "$(dirname "$0")"/list.awk
 
 }
 
@@ -53,15 +54,15 @@ usage() {
 Usage: todo [command] [arguments]...
 
 Commands:
-  list [regex]          - Lists todo items (default command), filter with regex.
-                          Multiple search terms supported, empty lists all items.
-  add [task] [deadline] - Add new item to todo list.
-  remove [regex]        - Remove a todo item matching a regex.
-                          A backup is created automatically.
-  restore               - Restores latest backup created by remove.
-  done [regex]          - Mark all matching items done.
-  undone [regex]        - Mark all matching items todo.
-  help                  - Prints this message.
+  list [regex]          - Lists todo items (default command), filter with regex
+                          Multiple search terms supported, empty lists all items
+  add [task] [deadline] - Add new item to todo list
+  remove [regex]        - Remove a todo item matching a regex, a backup is
+                          created automatically
+  restore               - Restores latest backup created by remove
+  done [regex]          - Mark all matching items done
+  undone [regex]        - Mark all matching items todo
+  help                  - Prints this message
 
   NOTES: 
       - A space in a regex argument is converted into '.*', so there is no way
@@ -74,11 +75,11 @@ EOF
 }
 
 case "$1" in
-    'add')
+    'a'|'add')
         shift
         add "$@"
         ;;
-    'remove')
+    'rm'|'remove')
         cp "$DB_FILE" "$DB_FILE".bak
         shift
         remove "$*"
@@ -96,7 +97,7 @@ case "$1" in
         shift
         mark_undone "$*"
         ;;
-    'list'|'')
+    'ls'|'list'|'')
         shift
         list "$*"
         ;;
